@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with GPT and Web Scraping</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Chat with GPT and Web Scraping</h1>
+        <form id="chatForm">
+            <label for="message">Your Message:</label>
+            <textarea id="message" required></textarea>
+
+            <label for="url">URL to Scrape (optional):</label>
+            <input type="text" id="url" placeholder="Enter a URL to scrape">
+
+            <button type="submit">Send</button>
+        </form>
+
+        <div id="response"></div>
+    </div>
+
+    <script>
+        // Betöltéskor visszaállítja a beszélgetési előzményeket
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatHistory = sessionStorage.getItem('chatHistory');
+            if (chatHistory) {
+                document.getElementById('response').innerHTML = chatHistory;
+            }
+        });
+
+        document.getElementById('chatForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const message = document.getElementById('message').value;
+            const url = document.getElementById('url').value;
+
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message, url: url }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                const responseElement = document.getElementById('response');
+                const newResponse = `<p><strong>You:</strong> ${message}</p><p><strong>Bot:</strong> ${data.response}</p>`;
+                
+                // Frissítjük a válasz mezőt és mentjük a session storage-ba
+                responseElement.innerHTML += newResponse;
+                sessionStorage.setItem('chatHistory', responseElement.innerHTML);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('response').innerText = 'An error occurred.';
+            });
+
+            // Üzenetmező kiürítése a küldés után
+            document.getElementById('message').value = '';
+        });
+    </script>
+</body>
+</html>
